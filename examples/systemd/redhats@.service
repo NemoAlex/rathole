@@ -1,5 +1,5 @@
 [Unit]
-Description=Rathole Client Service
+Description=Redhat Server Service
 After=network.target
 
 [Service]
@@ -9,9 +9,9 @@ RestartSec=5s
 LimitNOFILE=1048576
 
 # with root
-ExecStart=/usr/bin/rathole -c /etc/rathole/%i.toml
+ExecStart=/usr/bin/redhat -s /etc/redhat/%i.toml
 # without root
-# ExecStart=%h/.local/bin/rathole -c %h/.local/etc/rathole/%i.toml
+# ExecStart=%h/.local/bin/redhat -s %h/.local/etc/redhat/%i.toml
 
 [Install]
 WantedBy=multi-user.target

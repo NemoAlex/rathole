@@ -38,7 +38,7 @@ pub fn try_set_tcp_keepalive(
 #[allow(dead_code)]
 pub fn feature_not_compile(feature: &str) -> ! {
     panic!(
-        "The feature '{}' is not compiled in this binary. Please re-compile rathole",
+        "The feature '{}' is not compiled in this binary. Please re-compile redhat",
         feature
     )
 }
@@ -46,7 +46,7 @@ pub fn feature_not_compile(feature: &str) -> ! {
 #[allow(dead_code)]
 pub fn feature_neither_compile(feature1: &str, feature2: &str) -> ! {
     panic!(
-        "Neither of the feature '{}' or '{}' is compiled in this binary. Please re-compile rathole",
+        "Neither of the feature '{}' or '{}' is compiled in this binary. Please re-compile redhat",
         feature1, feature2
     )
 }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::Parser;
-use rathole::{run, Cli};
+use redhat::{run, Cli};
 use tokio::{signal, sync::broadcast};
 use tracing_subscriber::EnvFilter;
 
