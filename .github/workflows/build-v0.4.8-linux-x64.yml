@@ -1,0 +1,73 @@
+name: Build rathole v0.4.8 for Linux x64
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - agent/build-v0.4.8-linux-x64
+    paths:
+      - .github/workflows/build-v0.4.8-linux-x64.yml
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  TARGET: x86_64-unknown-linux-gnu
+  # Upstream rathole v0.4.8 tag, pinned to its commit rather than a movable tag.
+  RATHOLE_V0_4_8_COMMIT: 9727e15377d9430cd2d3b97f2292037048610209
+
+jobs:
+  build:
+    name: Linux x64 (glibc)
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out upstream v0.4.8 source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RATHOLE_V0_4_8_COMMIT }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Rust and native dependencies
+        run: |
+          rustup toolchain install stable --profile minimal --target "$TARGET"
+          sudo apt-get update
+          sudo apt-get install --yes pkg-config libssl-dev
+
+      - name: Verify pinned source version
+        run: |
+          test "$(git rev-parse HEAD)" = "$RATHOLE_V0_4_8_COMMIT"
+          grep --fixed-strings 'version = "0.4.8"' Cargo.toml
+
+      - name: Build release binary
+        run: cargo +stable build --release --locked --target "$TARGET"
+
+      - name: Package binary and checksums
+        run: |
+          mkdir -p dist/package
+          install -m 0755 "target/$TARGET/release/rathole" dist/package/rathole
+          {
+            echo "source_repository=https://github.com/rathole-org/rathole"
+            echo "source_version=v0.4.8"
+            echo "source_commit=$RATHOLE_V0_4_8_COMMIT"
+            echo "target=$TARGET"
+            rustc +stable --version
+            cargo +stable --version
+          } > dist/package/build-info.txt
+          tar -C dist/package -czf "dist/rathole-v0.4.8-$TARGET.tar.gz" rathole build-info.txt
+          sha256sum dist/package/rathole > "dist/rathole-v0.4.8-$TARGET.sha256"
+          sha256sum "dist/rathole-v0.4.8-$TARGET.tar.gz" >> "dist/rathole-v0.4.8-$TARGET.sha256"
+          "dist/package/rathole" --version
+
+      - name: Upload Linux x64 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rathole-v0.4.8-linux-x64
+          path: |
+            dist/rathole-v0.4.8-x86_64-unknown-linux-gnu.tar.gz
+            dist/rathole-v0.4.8-x86_64-unknown-linux-gnu.sha256
+          if-no-files-found: error
+          retention-days: 30
