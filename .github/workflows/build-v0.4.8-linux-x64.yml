@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Check out upstream v0.4.8 source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.RATHOLE_V0_4_8_COMMIT }}
           fetch-depth: 0
@@ -58,12 +58,16 @@ jobs:
             cargo +stable --version
           } > dist/package/build-info.txt
           tar -C dist/package -czf "dist/rathole-v0.4.8-$TARGET.tar.gz" rathole build-info.txt
-          sha256sum dist/package/rathole > "dist/rathole-v0.4.8-$TARGET.sha256"
-          sha256sum "dist/rathole-v0.4.8-$TARGET.tar.gz" >> "dist/rathole-v0.4.8-$TARGET.sha256"
+          pushd dist/package
+          sha256sum rathole > "../rathole-v0.4.8-$TARGET.sha256"
+          popd
+          pushd dist
+          sha256sum "rathole-v0.4.8-$TARGET.tar.gz" >> "rathole-v0.4.8-$TARGET.sha256"
+          popd
           "dist/package/rathole" --version
 
       - name: Upload Linux x64 artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rathole-v0.4.8-linux-x64
           path: |
