@@ -187,7 +187,7 @@ pub async fn read_hello<T: AsyncRead + AsyncWrite + Unpin>(conn: &mut T) -> Resu
         Hello::ControlChannelHello(v, _) => {
             if v != CURRENT_PROTO_VERSION {
                 bail!(
-                    "Protocol version mismatched. Expected {}, got {}. Please update `rathole`.",
+                    "Protocol version mismatched. Expected {}, got {}. Please update `redhat`.",
                     CURRENT_PROTO_VERSION,
                     v
                 );
@@ -196,7 +196,7 @@ pub async fn read_hello<T: AsyncRead + AsyncWrite + Unpin>(conn: &mut T) -> Resu
         Hello::DataChannelHello(v, _) => {
             if v != CURRENT_PROTO_VERSION {
                 bail!(
-                    "Protocol version mismatched. Expected {}, got {}. Please update `rathole`.",
+                    "Protocol version mismatched. Expected {}, got {}. Please update `redhat`.",
                     CURRENT_PROTO_VERSION,
                     v
                 );

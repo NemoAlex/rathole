@@ -14,26 +14,26 @@ pub async fn run_rathole_server(
     config_path: &str,
     shutdown_rx: broadcast::Receiver<bool>,
 ) -> Result<()> {
-    let cli = rathole::Cli {
+    let cli = redhat::Cli {
         config_path: Some(PathBuf::from(config_path)),
         server: true,
         client: false,
         ..Default::default()
     };
-    rathole::run(cli, shutdown_rx).await
+    redhat::run(cli, shutdown_rx).await
 }
 
 pub async fn run_rathole_client(
     config_path: &str,
     shutdown_rx: broadcast::Receiver<bool>,
 ) -> Result<()> {
-    let cli = rathole::Cli {
+    let cli = redhat::Cli {
         config_path: Some(PathBuf::from(config_path)),
         server: false,
         client: true,
         ..Default::default()
     };
-    rathole::run(cli, shutdown_rx).await
+    redhat::run(cli, shutdown_rx).await
 }
 
 pub mod tcp {
@@ -81,7 +81,7 @@ pub mod tcp {
 }
 
 pub mod udp {
-    use rathole::UDP_BUFFER_SIZE;
+    use redhat::UDP_BUFFER_SIZE;
     use tokio::net::UdpSocket;
     use tracing::debug;
 

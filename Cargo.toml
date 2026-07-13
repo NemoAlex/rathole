@@ -1,5 +1,5 @@
 [package]
-name = "rathole"
+name = "redhat"
 version = "0.4.8"
 edition = "2021"
 authors = ["Yujia Qiao <code@rapiz.me>"]
