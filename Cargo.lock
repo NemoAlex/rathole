@@ -1588,7 +1588,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "rathole"
+name = "rc2"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "62c64daa8e9438b84aaae55010a93f396f8e60e3911590fcba770d04643fc1dd"
+dependencies = [
+ "cipher",
+]
+
+[[package]]
+name = "redhat"
 version = "0.5.0"
 dependencies = [
  "anyhow",
@@ -1627,15 +1636,6 @@ dependencies = [
  "tracing-subscriber",
  "url",
  "vergen",
-]
-
-[[package]]
-name = "rc2"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62c64daa8e9438b84aaae55010a93f396f8e60e3911590fcba770d04643fc1dd"
-dependencies = [
- "cipher",
 ]
 
 [[package]]
