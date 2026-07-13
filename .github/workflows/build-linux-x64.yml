@@ -1,4 +1,4 @@
-name: Build redhat for Linux x64 (static OpenSSL)
+name: Build redhat v0.4.8 for Linux x64 (static OpenSSL)
 
 on:
   workflow_dispatch:
@@ -28,6 +28,7 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v7
         with:
+          ref: redhat-v0.4.8
           fetch-depth: 0
           persist-credentials: false
 
