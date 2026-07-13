@@ -48,16 +48,38 @@ jobs:
           test "$(git rev-parse HEAD)" = "$RATHOLE_V0_4_8_COMMIT"
           grep --fixed-strings 'version = "0.4.8"' Cargo.toml
 
-      - name: Run upstream release tests
-        run: cross test --release --locked --target "$TARGET" --verbose
-
       - name: Build with upstream cross image and static OpenSSL
-        run: cross build --release --locked --target "$TARGET"
+        run: |
+          cross build --release --locked --target "$TARGET"
+          mkdir -p dist/pristine
+          install -m 0755 "target/$TARGET/release/rathole" dist/pristine/rathole
+          "dist/pristine/rathole" --version
+
+      - name: Generate fresh TLS certificates for integration tests
+        run: |
+          pushd examples/tls
+          sh ./create_self_signed_cert.sh
+          openssl pkcs12 -export \
+            -out identity.pfx \
+            -inkey server.key \
+            -in server.crt \
+            -certfile rootCA.crt \
+            -passout pass:1234 \
+            -keypbe PBE-SHA1-3DES \
+            -certpbe PBE-SHA1-3DES \
+            -macalg sha1
+          openssl x509 -in rootCA.crt -noout -checkend 86400
+          openssl x509 -in server.crt -noout -checkend 86400
+          popd
+
+      - name: Run upstream release tests with refreshed certificates
+        timeout-minutes: 15
+        run: cross test --release --locked --target "$TARGET" --verbose
 
       - name: Verify linkage, then package binary and checksums
         run: |
           mkdir -p dist/package
-          install -m 0755 "target/$TARGET/release/rathole" dist/package/rathole
+          install -m 0755 dist/pristine/rathole dist/package/rathole
           file dist/package/rathole | tee dist/package/file-info.txt
           readelf --dynamic dist/package/rathole | tee dist/package/dynamic-section.txt
           ldd dist/package/rathole | tee dist/package/linked-libraries.txt
@@ -76,6 +98,7 @@ jobs:
             echo "openssl_linkage=static"
             echo "cross_base=ubuntu:14.04"
             echo "upx=disabled"
+            echo "test_certificates=regenerated_after_release_build"
             rustc --version
             cargo --version
             cross --version
