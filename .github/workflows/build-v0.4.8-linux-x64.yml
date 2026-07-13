@@ -1,4 +1,4 @@
-name: Build rathole v0.4.8 for Linux x64
+name: Build rathole v0.4.8 with upstream toolchain
 
 on:
   workflow_dispatch:
@@ -14,14 +14,17 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
   TARGET: x86_64-unknown-linux-gnu
+  RUST_TOOLCHAIN: 1.69.0
+  CROSS_VERSION: 0.1.16
+  OPENSSL_VERSION: 1.0.2t
   # Upstream rathole v0.4.8 tag, pinned to its commit rather than a movable tag.
   RATHOLE_V0_4_8_COMMIT: 9727e15377d9430cd2d3b97f2292037048610209
 
 jobs:
   build:
-    name: Linux x64 (glibc)
+    name: Linux x64 (upstream-compatible static OpenSSL)
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Check out upstream v0.4.8 source
@@ -31,47 +34,69 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Install Rust and native dependencies
+      - name: Install the upstream Rust and cross versions
         run: |
-          rustup toolchain install stable --profile minimal --target "$TARGET"
-          sudo apt-get update
-          sudo apt-get install --yes pkg-config libssl-dev
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+          cargo install cross --version "$CROSS_VERSION" --locked
+          rustc --version
+          cargo --version
+          cross --version
 
       - name: Verify pinned source version
         run: |
           test "$(git rev-parse HEAD)" = "$RATHOLE_V0_4_8_COMMIT"
           grep --fixed-strings 'version = "0.4.8"' Cargo.toml
 
-      - name: Build release binary
-        run: cargo +stable build --release --locked --target "$TARGET"
+      - name: Run upstream release tests
+        run: cross test --release --locked --target "$TARGET" --verbose
 
-      - name: Package binary and checksums
+      - name: Build with upstream cross image and static OpenSSL
+        run: cross build --release --locked --target "$TARGET"
+
+      - name: Verify linkage, then package binary and checksums
         run: |
           mkdir -p dist/package
           install -m 0755 "target/$TARGET/release/rathole" dist/package/rathole
+          file dist/package/rathole | tee dist/package/file-info.txt
+          readelf --dynamic dist/package/rathole | tee dist/package/dynamic-section.txt
+          ldd dist/package/rathole | tee dist/package/linked-libraries.txt
+          if grep --extended-regexp --ignore-case 'lib(ssl|crypto)\.so' dist/package/dynamic-section.txt dist/package/linked-libraries.txt; then
+            echo "OpenSSL was dynamically linked; refusing to publish this artifact."
+            exit 1
+          fi
           {
             echo "source_repository=https://github.com/rathole-org/rathole"
             echo "source_version=v0.4.8"
             echo "source_commit=$RATHOLE_V0_4_8_COMMIT"
             echo "target=$TARGET"
-            rustc +stable --version
-            cargo +stable --version
+            echo "rust_toolchain=$RUST_TOOLCHAIN"
+            echo "cross_version=$CROSS_VERSION"
+            echo "openssl_version=$OPENSSL_VERSION"
+            echo "openssl_linkage=static"
+            echo "cross_base=ubuntu:14.04"
+            echo "upx=disabled"
+            rustc --version
+            cargo --version
+            cross --version
           } > dist/package/build-info.txt
-          tar -C dist/package -czf "dist/rathole-v0.4.8-$TARGET.tar.gz" rathole build-info.txt
+          tar -C dist/package -czf "dist/rathole-v0.4.8-$TARGET-static-openssl.tar.gz" \
+            rathole build-info.txt file-info.txt dynamic-section.txt linked-libraries.txt
           pushd dist/package
-          sha256sum rathole > "../rathole-v0.4.8-$TARGET.sha256"
+          sha256sum rathole > "../rathole-v0.4.8-$TARGET-static-openssl.sha256"
           popd
           pushd dist
-          sha256sum "rathole-v0.4.8-$TARGET.tar.gz" >> "rathole-v0.4.8-$TARGET.sha256"
+          sha256sum "rathole-v0.4.8-$TARGET-static-openssl.tar.gz" \
+            >> "rathole-v0.4.8-$TARGET-static-openssl.sha256"
           popd
           "dist/package/rathole" --version
 
       - name: Upload Linux x64 artifact
         uses: actions/upload-artifact@v7
         with:
-          name: rathole-v0.4.8-linux-x64
+          name: rathole-v0.4.8-linux-x64-static-openssl
           path: |
-            dist/rathole-v0.4.8-x86_64-unknown-linux-gnu.tar.gz
-            dist/rathole-v0.4.8-x86_64-unknown-linux-gnu.sha256
+            dist/rathole-v0.4.8-x86_64-unknown-linux-gnu-static-openssl.tar.gz
+            dist/rathole-v0.4.8-x86_64-unknown-linux-gnu-static-openssl.sha256
           if-no-files-found: error
           retention-days: 30
