@@ -15,7 +15,7 @@
 ![tcp_bitrate](./img/tcp_bitrate.svg)
 ![udp_bitrate](./img/udp_bitrate.svg)
 
-rathole with the following configuration:
+redhat with the following configuration:
 ```toml
 [client]
 remote_addr = "localhost:2333"
@@ -73,7 +73,7 @@ Optional features available: CPU affinity setting, IPv6 flow label, TCP congesti
 $ sudo iperf3 -s -p 80
 ```
 
-For rathole benchmark:
+For redhat benchmark:
 ```
 $ iperf3 -c 127.0.0.1 -p 5202
 ```
@@ -87,13 +87,13 @@ $ iperf3 -c 127.0.0.1 -p 5203
 
 nginx/1.20.2 listens on port 80, with the default test page.
 
-frp and rathole configuration is same with the previous section.
+frp and redhat configuration is same with the previous section.
 
 [vegeta](https://github.com/tsenart/vegeta) is used to generate HTTP load.
 
 ### HTTP Throughput
 
-The following commands are used to benchmark rathole and frp. Note that if you want to do a benchmark yourself, `-max-workers` should be adjusted to get the accurate results for your machine.
+The following commands are used to benchmark redhat and frp. Note that if you want to do a benchmark yourself, `-max-workers` should be adjusted to get the accurate results for your machine.
 
 ```
 echo 'GET http://127.0.0.1:5203' | vegeta attack -rate 0 -duration 30s -max-workers 48
@@ -104,11 +104,11 @@ echo 'GET http://127.0.0.1:5202' | vegeta attack -rate 0 -duration 30s -max-work
 
 ### HTTP Latency
 
-`rathole` has very similar latency to `frp`, but can handle more connections
+`redhat` has very similar latency to `frp`, but can handle more connections
 
 Here's a table, latency is in ms
 
-|QPS|latency(rathole)|latency(frp)|
+|QPS|latency(redhat)|latency(frp)|
 |--|--|---|
 |1|2.113|2.55|
 |1000|1.723|1.742|
@@ -116,10 +116,10 @@ Here's a table, latency is in ms
 |3000|2.064|2.011|
 |4000|2.569|7907|
 
-As you can see, for QPS from 1 to 3000, rathole and frp have nearly identical latency.
+As you can see, for QPS from 1 to 3000, redhat and frp have nearly identical latency.
 But with QPS of 4000, frp starts reporting lots of errors and the latency grows to even seconds. This kind of reflects the throughput in the previous section.
 
-Thus, in terms of latency, rathole and frp are nearly the same. But rathole can handle more connections.
+Thus, in terms of latency, redhat and frp are nearly the same. But redhat can handle more connections.
 
 [Script to benchmark latency](../benches/scripts/http/latency.sh)
 
@@ -127,7 +127,7 @@ Thus, in terms of latency, rathole and frp are nearly the same. But rathole can 
 
 ![mem](./img/mem-graph.png)
 
-The graph shows the memory usage of frp and rathole when `vegeta attack -duration 30s -rate 1000` is executed.
-rathole uses much less memory than frp.
+The graph shows the memory usage of frp and redhat when `vegeta attack -duration 30s -rate 1000` is executed.
+redhat uses much less memory than frp.
 
 [Script to benchmark memory](../benches/scripts/mem/mem.sh)

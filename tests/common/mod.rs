@@ -10,7 +10,7 @@ use tokio::{
 pub const PING: &str = "ping";
 pub const PONG: &str = "pong";
 
-pub async fn run_rathole_server(
+pub async fn run_redhat_server(
     config_path: &str,
     shutdown_rx: broadcast::Receiver<bool>,
 ) -> Result<()> {
@@ -23,7 +23,7 @@ pub async fn run_rathole_server(
     redhat::run(cli, shutdown_rx).await
 }
 
-pub async fn run_rathole_client(
+pub async fn run_redhat_client(
     config_path: &str,
     shutdown_rx: broadcast::Receiver<bool>,
 ) -> Result<()> {

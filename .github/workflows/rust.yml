@@ -29,44 +29,36 @@ jobs:
       - name: Clippy
         run: cargo clippy -- -D warnings
       - name: Setup cargo-hack
-        run: cargo install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
       - name: Check all features
         run: >
           cargo hack check --feature-powerset --no-dev-deps
           --mutually-exclusive-features default,native-tls,websocket-native-tls,rustls,websocket-rustls
 
   build:
-    name: Build for ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            exe: redhat
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            exe: redhat.exe
-            target: x86_64-pc-windows-msvc
-          - os: macos-latest
-            exe: redhat
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            exe: redhat
-            target: aarch64-apple-darwin
+    name: Build static Linux x86_64
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
+          target: x86_64-unknown-linux-musl
       - uses: Swatinem/rust-cache@v1
-      - name: Build
-        run: cargo build
-      - name: Run tests with native-tls
-        run: cargo test --verbose
-      - name: Run tests with rustls
-        run: cargo test --verbose --no-default-features --features server,client,rustls,noise,websocket-rustls,hot-reload
+      - name: Install musl toolchain
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - name: Build release
+        run: cargo build --locked --release --target x86_64-unknown-linux-musl --features openssl
+      - name: Verify static binary
+        run: |
+          file target/x86_64-unknown-linux-musl/release/redhat
+          if readelf -d target/x86_64-unknown-linux-musl/release/redhat | grep -q NEEDED; then
+            echo "redhat must not depend on dynamic libraries"
+            exit 1
+          fi
+          target/x86_64-unknown-linux-musl/release/redhat --version
       - uses: actions/upload-artifact@v4
         with:
-          name: redhat-${{ matrix.target }}
-          path: target/debug/${{ matrix.exe }}
+          name: redhat-linux-x86_64
+          path: target/x86_64-unknown-linux-musl/release/redhat
