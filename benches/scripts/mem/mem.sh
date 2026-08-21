@@ -20,17 +20,17 @@ sleep 10
 kill $(jobs -p)
 
 
-echo rathole
+echo redhat
 
-pid_s=$(ps aux | grep "rathole -s" | head -n 1 | awk '{print $2}')
+pid_s=$(ps aux | grep "redhat -s" | head -n 1 | awk '{print $2}')
 while true; do
-	ps --pid $pid_s -o rsz= >> ratholec-mem.log
+	ps --pid $pid_s -o rsz= >> redhatc-mem.log
 sleep 1
 done &
 
-pid_c=$(ps aux | grep "rathole -c" | head -n 1 | awk '{print $2}')
+pid_c=$(ps aux | grep "redhat -c" | head -n 1 | awk '{print $2}')
 while true; do
-	ps --pid $pid_c -o rsz= >> ratholes-mem.log
+	ps --pid $pid_c -o rsz= >> redhats-mem.log
 sleep 1
 done &
 
@@ -42,5 +42,5 @@ kill $(jobs -p)
 
 gawk -i inplace '{print $1 "000"}' frpc-mem.log
 gawk -i inplace '{print $1 "000"}' frps-mem.log
-gawk -i inplace '{print $1 "000"}' ratholec-mem.log
-gawk -i inplace '{print $1 "000"}' ratholes-mem.log
+gawk -i inplace '{print $1 "000"}' redhatc-mem.log
+gawk -i inplace '{print $1 "000"}' redhats-mem.log
