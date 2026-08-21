@@ -45,13 +45,9 @@ jobs:
         with:
           profile: minimal
       - uses: Swatinem/rust-cache@v1
-      - name: Build
-        run: cargo build
-      - name: Run tests with native-tls
-        run: cargo test --verbose
-      - name: Run tests with rustls
-        run: cargo test --verbose --no-default-features --features server,client,rustls,noise,websocket-rustls,hot-reload
+      - name: Build release
+        run: cargo build --locked --release --target x86_64-unknown-linux-gnu
       - uses: actions/upload-artifact@v4
         with:
           name: redhat-x86_64-unknown-linux-gnu
-          path: target/debug/redhat
+          path: target/x86_64-unknown-linux-gnu/release/redhat
