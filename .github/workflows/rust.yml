@@ -29,30 +29,15 @@ jobs:
       - name: Clippy
         run: cargo clippy -- -D warnings
       - name: Setup cargo-hack
-        run: cargo install cargo-hack
+        uses: taiki-e/install-action@cargo-hack
       - name: Check all features
         run: >
           cargo hack check --feature-powerset --no-dev-deps
           --mutually-exclusive-features default,native-tls,websocket-native-tls,rustls,websocket-rustls
 
   build:
-    name: Build for ${{ matrix.target }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            exe: redhat
-            target: x86_64-unknown-linux-gnu
-          - os: windows-latest
-            exe: redhat.exe
-            target: x86_64-pc-windows-msvc
-          - os: macos-latest
-            exe: redhat
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            exe: redhat
-            target: aarch64-apple-darwin
+    name: Build for x86_64-unknown-linux-gnu
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -68,5 +53,5 @@ jobs:
         run: cargo test --verbose --no-default-features --features server,client,rustls,noise,websocket-rustls,hot-reload
       - uses: actions/upload-artifact@v4
         with:
-          name: redhat-${{ matrix.target }}
-          path: target/debug/${{ matrix.exe }}
+          name: redhat-x86_64-unknown-linux-gnu
+          path: target/debug/redhat
