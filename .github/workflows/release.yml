@@ -12,7 +12,7 @@ env:
 
 jobs:
   release:
-    name: Build release for x86_64-unknown-linux-gnu
+    name: Build static Linux x86_64 release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -21,38 +21,46 @@ jobs:
           profile: minimal
           default: true
 
-      - name: Install OpenSSL
-        run: sudo apt-get install pkg-config libssl-dev
+      - name: Install musl toolchain
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
       - name: Install target
-        run: rustup target add x86_64-unknown-linux-gnu
+        run: rustup target add x86_64-unknown-linux-musl
       - name: Run tests
-        run: cargo test --release --target x86_64-unknown-linux-gnu --verbose
+        run: cargo test --release --target x86_64-unknown-linux-musl --features openssl --verbose
       - name: Build release
-        run: cargo build --release --target x86_64-unknown-linux-gnu
+        run: cargo build --locked --release --target x86_64-unknown-linux-musl --features openssl
+      - name: Verify static binary
+        run: |
+          file target/x86_64-unknown-linux-musl/release/redhat
+          if readelf -d target/x86_64-unknown-linux-musl/release/redhat | grep -q NEEDED; then
+            echo "redhat must not depend on dynamic libraries"
+            exit 1
+          fi
+          target/x86_64-unknown-linux-musl/release/redhat --version
 
       - name: Run UPX
         continue-on-error: true
         uses: crazy-max/ghaction-upx@v1
         with:
           version: v4.0.2
-          files: target/x86_64-unknown-linux-gnu/release/redhat
+          files: target/x86_64-unknown-linux-musl/release/redhat
           args: -q --best --lzma
       - uses: actions/upload-artifact@v4
         with:
-          name: redhat-x86_64-unknown-linux-gnu
-          path: target/x86_64-unknown-linux-gnu/release/redhat
+          name: redhat-linux-x86_64
+          path: target/x86_64-unknown-linux-musl/release/redhat
       - name: Zip Release
         uses: TheDoctor0/zip-release@0.6.1
         with:
           type: zip
-          filename: redhat-x86_64-unknown-linux-gnu.zip
-          directory: target/x86_64-unknown-linux-gnu/release/
+          filename: redhat-linux-x86_64.zip
+          directory: target/x86_64-unknown-linux-musl/release/
           path: redhat
       - name: Publish
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: target/x86_64-unknown-linux-gnu/release/redhat-x86_64-unknown-linux-gnu.zip
+          files: target/x86_64-unknown-linux-musl/release/redhat-linux-x86_64.zip
           generate_release_notes: true
           draft: true
   docker:

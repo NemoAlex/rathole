@@ -1,11 +1,12 @@
 FROM rust:bookworm as builder
-RUN apt update && apt install -y libssl-dev
+RUN apt update && apt install -y musl-tools
+RUN rustup target add x86_64-unknown-linux-musl
 WORKDIR /home/rust/src
 COPY . .
-ARG FEATURES
-RUN cargo build --locked --release --features ${FEATURES:-default}
+ARG FEATURES=openssl
+RUN cargo build --locked --release --target x86_64-unknown-linux-musl --features ${FEATURES}
 RUN mkdir -p build-out/
-RUN cp target/release/redhat build-out/
+RUN cp target/x86_64-unknown-linux-musl/release/redhat build-out/
 
 
 
